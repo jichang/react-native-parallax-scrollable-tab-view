@@ -1,0 +1,35 @@
+{
+  "name": "react-native-parallax-scrollable-tab-view",
+  "version": "0.1.0",
+  "description": "a parallax scrollable tab view for react native",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "scripts": {
+    "prepare": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JacobChang/react-native-parallax-scrollable-tab-view.git"
+  },
+  "keywords": [
+    "parllax",
+    "scrollable",
+    "tab"
+  ],
+  "author": "Jacob Chang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JacobChang/react-native-parallax-scrollable-tab-view/issues"
+  },
+  "homepage": "https://github.com/JacobChang/react-native-parallax-scrollable-tab-view#readme",
+  "devDependencies": {
+    "@types/react": "^16.9.14",
+    "@types/react-native": "^0.60.23",
+    "typescript": "^3.7.2"
+  }
+}

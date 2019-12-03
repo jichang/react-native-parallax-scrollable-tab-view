@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Animated, View, Text } from "react-native";
-import { ParallaxScrollableTabView } from "./ParallaxScrollableTabView";
-import { ITab } from "./ParallaxScrollableTabView/ScrollableTabView";
+import { ParallaxScrollableTabView } from "react-native-parallax-scrollable-tab-view";
+import { ITab } from "react-native-parallax-scrollable-tab-view/lib/ScrollableTabView";
 
 export const HEADER_OFFSET = 100;
 
@@ -100,7 +100,12 @@ export default class App extends React.Component<IProps, IState> {
                   { key: "7" },
                   { key: "8" },
                   { key: "9" },
-                  { key: "10" }
+                  { key: "10" },
+                  { key: "11" },
+                  { key: "12" },
+                  { key: "13" },
+                  { key: "14" },
+                  { key: "15" }
                 ]}
               />
             );
