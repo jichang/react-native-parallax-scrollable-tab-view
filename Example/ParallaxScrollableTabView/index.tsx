@@ -52,6 +52,7 @@ export class ParallaxScrollableTabView extends React.Component<IProps, IState> {
     for (let tab of tabs) {
       let tabRef = createRef<FlatList<any>>();
       let scrollOffsetValue = new Animated.Value(0);
+      scrollOffsetValue.addListener(() => {});
 
       this.tabRefs.set(tab.key, tabRef);
       this.tabScrollOffsets.set(tab.key, 0);
@@ -62,12 +63,6 @@ export class ParallaxScrollableTabView extends React.Component<IProps, IState> {
     this.state = {
       parallaxOffsetValue: this.generateParallaxOffsetValue(activeTabKey)
     };
-  }
-
-  componentWillUnmount() {
-    for (let [_tabKey, tabScrollOffsetValue] of this.tabScrollOffsetValues) {
-      tabScrollOffsetValue.removeAllListeners();
-    }
   }
 
   generateParallaxOffsetValue(tabKey: string) {
@@ -87,7 +82,56 @@ export class ParallaxScrollableTabView extends React.Component<IProps, IState> {
     });
   }
 
+  checkParallaxInterpolateLowerBound(tabKey, offsetY) {
+    if (offsetY < 0) {
+      return;
+    }
+
+    let needRebind = false;
+    const { headerOffset } = this.props;
+    const tabParallaxInterpolateLowerBound = this.tabParallaxInterpolateLowerBounds.get(
+      tabKey
+    );
+    const parallaxOffset = this.state.parallaxOffsetValue.__getValue();
+    const tabScrollOffset = this.tabScrollOffsets.get(tabKey);
+    const deltaY = offsetY - tabScrollOffset;
+    if (
+      Math.abs(parallaxOffset) === headerOffset &&
+      tabParallaxInterpolateLowerBound !== 0
+    ) {
+      this.tabParallaxInterpolateLowerBounds.set(tabKey, 0);
+      needRebind = true;
+    } else if (
+      deltaY > 0 &&
+      parallaxOffset === 0 &&
+      tabParallaxInterpolateLowerBound !== 0
+    ) {
+      this.tabParallaxInterpolateLowerBounds.set(tabKey, tabScrollOffset);
+      needRebind = true;
+    }
+
+    if (needRebind) {
+      this.setState({
+        parallaxOffsetValue: this.generateParallaxOffsetValue(tabKey)
+      });
+    }
+  }
+
+  updateParallaxInterpolateLowerBound(tabKey: string) {
+    if (this.tabScrollOffsets[tabKey] <= -this.parallaxOffset) {
+      this.tabScrollOffsets.set(tabKey, -this.parallaxOffset);
+      this.tabParallaxInterpolateLowerBounds.set(tabKey, 0);
+    } else {
+      this.tabParallaxInterpolateLowerBounds.set(
+        tabKey,
+        this.tabScrollOffsets.get(tabKey) + this.parallaxOffset
+      );
+    }
+  }
+
   onTabChange = ({ tab }: { tab: ITab }) => {
+    this.updateParallaxInterpolateLowerBound(tab.key);
+
     this.setState({
       parallaxOffsetValue: this.generateParallaxOffsetValue(tab.key)
     });
@@ -96,6 +140,34 @@ export class ParallaxScrollableTabView extends React.Component<IProps, IState> {
       this.props.onTabChange({ tab });
     }
   };
+
+  synchronizeScrollOffsets() {
+    const parallaxOffset = this.state.parallaxOffsetValue.__getValue();
+    const delta = parallaxOffset - this.parallaxOffset;
+    if (delta === 0) {
+      return;
+    }
+
+    const { activeTabKey } = this.props;
+
+    this.tabRefs.forEach((tabRef, tabKey) => {
+      if (tabKey !== activeTabKey) {
+        const tabScrollOffset = this.tabScrollOffsets.get(tabKey);
+        const syncedScrollOffset = tabScrollOffset + delta;
+        const tabScrollOffsetValue = this.tabScrollOffsetValues.get(tabKey);
+        if (tabRef && tabRef.current) {
+          tabRef.current.scrollToOffset({
+            offset: syncedScrollOffset,
+            animated: false
+          });
+        }
+        this.tabScrollOffsets.set(tabKey, syncedScrollOffset);
+        tabScrollOffsetValue.setValue(syncedScrollOffset);
+      }
+    });
+
+    this.parallaxOffset = parallaxOffset;
+  }
 
   onScroll = (tab: ITab) => {
     return Animated.event(
@@ -115,7 +187,8 @@ export class ParallaxScrollableTabView extends React.Component<IProps, IState> {
             contentOffset: { y }
           }
         }: NativeSyntheticEvent<NativeScrollEvent>) => {
-          this.tabScrollOffsets[tab.key] = y;
+          this.checkParallaxInterpolateLowerBound(tab.key, y);
+          this.tabScrollOffsets.set(tab.key, y);
         }
       }
     );
@@ -134,7 +207,7 @@ export class ParallaxScrollableTabView extends React.Component<IProps, IState> {
       contentOffset: { y }
     }
   }: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { activeTabKey } = this.props;
+    this.synchronizeScrollOffsets();
   };
 
   onMomentumScrollEnd = ({
@@ -142,7 +215,7 @@ export class ParallaxScrollableTabView extends React.Component<IProps, IState> {
       contentOffset: { y }
     }
   }: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { activeTabKey } = this.props;
+    this.synchronizeScrollOffsets();
   };
 
   render() {
