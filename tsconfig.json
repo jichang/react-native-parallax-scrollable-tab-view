@@ -4,8 +4,10 @@
     "module": "commonjs",
     "declaration": true,
     "outDir": "./lib",
+    "lib": ["ES2015"],
     "strict": true,
-    "jsx": "react-native"
+    "jsx": "react-native",
+    "types": ["react", "react-native"]
   },
   "include": ["src"],
   "exclude": ["node_modules"]
