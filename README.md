@@ -1,6 +1,6 @@
 # react-native-parallax-scrollable-tab-view
 
-# this is just an incomplete library
+# Works on iOS and Anroid
 
 # Usage
 
